@@ -1,0 +1,8 @@
+server:
+  port: 1235
+
+logging:
+  level:
+    com.triibiotech.websocket: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50}[%line] - %msg%n"
