@@ -1,5 +1,6 @@
 package com.triibiotech.yjs.utils.event;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -10,7 +11,7 @@ public class EventOperator {
     public Object insert;
     public Long retain;
     public Long delete;
-    public Object attributes;
+    public Map<String, Object> attributes;
     public Boolean isInsertDefined;
     public Boolean isRetainDefined;
     public Boolean isDeleteDefined;
@@ -44,11 +45,11 @@ public class EventOperator {
         this.delete = delete;
     }
 
-    public Object getAttributes() {
+    public Map<String, Object> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(Object attributes) {
+    public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
     }
 

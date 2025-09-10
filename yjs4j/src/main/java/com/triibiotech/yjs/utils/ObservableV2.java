@@ -29,6 +29,11 @@ public class ObservableV2<EVENTS> {
         void apply(T arg);
     }
 
+    @FunctionalInterface
+    public interface Handler2 {
+        void apply(byte[] update, Object origin);
+    }
+
     // === 注册 ===
 
     /**
@@ -37,6 +42,11 @@ public class ObservableV2<EVENTS> {
     public <E extends EVENTS> Handler on(E event, Handler handler) {
         observers.computeIfAbsent(event, k -> new LinkedHashSet<>()).add(handler);
         return handler;
+    }
+
+    public <E extends EVENTS> Handler on(E event, Handler2 handler) {
+        Handler wrapper = args -> handler.apply((byte[]) args[0], args[1]);
+        return on(event, wrapper);
     }
 
     /**

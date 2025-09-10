@@ -153,6 +153,10 @@ public class YText extends AbstractType<YTextEvent> {
         }
     }
 
+    public List<EventOperator> toDelta() {
+        return this.toDelta(null, null, null);
+    }
+
     public List<EventOperator> toDelta(Snapshot snapshot, Snapshot prevSnapshot, BiFunction<String, ID, Object> computeYChange) {
         if (doc == null) {
             EncodingUtil.log.warn("Invalid access: Add Yjs type to a document before reading data.");
@@ -274,12 +278,13 @@ public class YText extends AbstractType<YTextEvent> {
             return;
         }
         if (doc != null) {
-            boolean useSearchMarker = attributes != null;
             Transaction.transact(doc, transaction -> {
-                Map<String, Object> attr = new HashMap<>();
-                ItemTextListPosition pos = ItemTextListPosition.findPosition(transaction, this, index, useSearchMarker);
-                if (useSearchMarker) {
+                Map<String, Object> attr;
+                ItemTextListPosition pos = ItemTextListPosition.findPosition(transaction, this, index, attributes == null);
+                if (attributes == null) {
                     attr = new HashMap<>(pos.currentAttributes);
+                } else {
+                    attr = new HashMap<>(attributes);
                 }
                 ItemTextListPosition.insertText(transaction, this, pos, text, attr);
                 return attr;

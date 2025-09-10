@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
 
     <name>Yjs4j Core</name>
-    <description>Java implementation of Yjs CRDT library - Core Module</description>
+    <description>Java implementation of Yjs CRDT library - Core Module, Fork of Yjs 13.6.27</description>
 
     <dependencies>
         <dependency>

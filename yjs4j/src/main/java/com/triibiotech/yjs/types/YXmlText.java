@@ -65,27 +65,29 @@ public class YXmlText extends YText {
 
     private static class Attr {
         String key;
-        String value;
+        Object value;
 
-        Attr(String key, String value) {
+        Attr(String key, Object value) {
             this.key = key;
             this.value = value;
         }
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public String toString() {
         StringBuilder result = new StringBuilder();
-        for (EventOperator delta : toDelta(null, null, null)) {
+        for (EventOperator delta : toDelta()) {
             List<NestedNode> nestedNodes = new ArrayList<>();
             JSONObject attributes = JSON.parseObject(JSON.toJSONString(delta.attributes));
-            if(attributes != null) {
+            if (attributes != null) {
                 for (String nodeName : attributes.keySet()) {
-                    Map<String, String> attrMap = (Map<String, String>) attributes.get(nodeName);
-
                     List<Attr> attrs = new ArrayList<>();
-                    for (Map.Entry<String, String> attrEntry : attrMap.entrySet()) {
-                        attrs.add(new Attr(attrEntry.getKey(), attrEntry.getValue()));
+                    Object object = attributes.get(nodeName);
+                    if (object instanceof String) {
+                        for (int i = 0; i < ((String) object).length(); i++) {
+                            attrs.add(new Attr(i + "", ((String) object).charAt(i)));
+                        }
                     }
                     // 对属性排序，确保唯一顺序
                     attrs.sort(Comparator.comparing(attr -> attr.key));

@@ -5,7 +5,6 @@ import com.triibiotech.yjs.protocol.awareness.AwarenessEventParams;
 import com.triibiotech.yjs.protocol.sync.SyncProtocol;
 import com.triibiotech.yjs.utils.Doc;
 import com.triibiotech.yjs.utils.DocOptions;
-import com.triibiotech.yjs.utils.encoding.EncodingUtil;
 import com.triibiotech.yjs.utils.lib0.encoding.Encoder;
 import org.springframework.web.socket.WebSocketSession;
 

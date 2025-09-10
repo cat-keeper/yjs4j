@@ -188,12 +188,12 @@ public class ItemTextListPosition {
 
         for (Map.Entry<String, Object> entry : attributes.entrySet()) {
             String key = entry.getKey();
-            Object newVal = entry.getValue();
+            Object val = entry.getValue();
 
             Object currentVal = currPos.currentAttributes.getOrDefault(key, null);
 
             // 如果当前值与目标值不同，说明需要插入
-            if (!Objects.equals(currentVal, newVal)) {
+            if (!Objects.equals(currentVal, val)) {
                 // 存储被替代的属性
                 negatedAttributes.put(key, currentVal);
 
@@ -201,7 +201,7 @@ public class ItemTextListPosition {
                 Item right = currPos.right;
 
                 ID id = ID.createId(ownClientId, doc.getStore().getState(ownClientId));
-                ContentFormat content = new ContentFormat(key, newVal);
+                ContentFormat content = new ContentFormat(key, val);
 
                 Item formatItem = new Item(
                         id,
@@ -331,7 +331,7 @@ public class ItemTextListPosition {
                     Object value = cf.getValue();
                     Object attr = attributes.get(key);
 
-                    if (attr != null) {
+                    if (attributes.containsKey(key)) {
                         if (Objects.equals(attr, value)) {
                             // 跳过无变化项
                             negatedAttributes.remove(key);
