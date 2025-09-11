@@ -1,5 +1,7 @@
 package com.triibiotech.yjs.utils;
 
+import com.triibiotech.yjs.types.YArray;
+import com.triibiotech.yjs.types.YText;
 import com.triibiotech.yjs.types.YXmlText;
 import com.triibiotech.yjs.utils.encoding.EncodingUtil;
 import com.triibiotech.yjs.utils.event.EventOperator;
@@ -7,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -69,4 +72,118 @@ public class UndoRedoTest {
     void testUndoText() {
 
     }
+
+    @Test
+    void testEmptyTypeScope() {
+        Doc ydoc = new Doc();
+        UndoManagerOptions options = new UndoManagerOptions();
+        UndoManager um = new UndoManager(ydoc, options);
+        YArray<Object> yArray = ydoc.getArray("");
+        um.addToScope(yArray);
+        yArray.insert(0, 1);
+        um.undo();
+        Assertions.assertEquals(0, yArray.getLength());
+    }
+
+    @Test
+    void testRejectUpdateExample() {
+        Doc tmpydoc1 = new Doc();
+        tmpydoc1.getArray("restricted").insert(0, 1);
+        tmpydoc1.getArray("public").insert(0, 1);
+        byte[] update1 = EncodingUtil.encodeStateAsUpdate(tmpydoc1, null);
+        Doc tmpydoc2 = new Doc();
+        tmpydoc2.getArray("public").insert(0, 2);
+        byte[] update2 = EncodingUtil.encodeStateAsUpdate(tmpydoc2, null);
+        Doc ydoc = new Doc();
+        YArray<Object> restrictedType = ydoc.getArray("restricted");
+        updateHandler(update1, ydoc, restrictedType);
+        updateHandler(update2, ydoc, restrictedType);
+        long length = restrictedType.getLength();
+        long l1 = ydoc.getArray("public").getLength();
+        Assertions.assertEquals(0, length);
+        Assertions.assertEquals(2, l1);
+    }
+
+    void updateHandler(byte[] update, Doc ydoc, Object typeScope) {
+        UndoManagerOptions options = new UndoManagerOptions();
+        HashSet<Object> trackedOrigins = new HashSet<>();
+        trackedOrigins.add("remote change");
+        options.setTrackedOrigins(trackedOrigins);
+        UndoManager um = new UndoManager(typeScope, options);
+
+        byte[] beforePendingDs = ydoc.store.pendingDs;
+        byte[] beforePendingStructs = null;
+        if(ydoc.store.pendingStructs != null) {
+            beforePendingStructs = ydoc.store.pendingStructs.update;
+        }
+        try {
+            EncodingUtil.applyUpdate(ydoc, update, "remote change");
+        } finally {
+            while (!um.undoStack.isEmpty()) {
+                um.undo();
+            }
+            um.destroy();
+            ydoc.store.pendingDs = beforePendingDs;
+            ydoc.store.pendingStructs = null;
+            if (beforePendingStructs != null) {
+                EncodingUtil.applyUpdateV2(ydoc, beforePendingStructs);
+            }
+        }
+    }
+
+    @Test
+    void testGlobalScope() {
+        Doc ydoc = new Doc();
+        UndoManager um = new UndoManager(ydoc, new UndoManagerOptions());
+        YArray<Object> yArray = ydoc.getArray("");
+        yArray.insert(0, 1);
+        um.undo();
+        Assertions.assertEquals(0, yArray.getLength());
+    }
+
+    @Test
+    void testDoubleUndo() {
+        Doc ydoc = new Doc();
+        YText text = ydoc.getText("");
+        text.insert(0, "1221");
+        UndoManager um = new UndoManager(text, new UndoManagerOptions());
+        text.insert(2, "3");
+        text.insert(3, "3");
+        um.undo();
+        um.undo();
+        text.insert(2, "3");
+        Assertions.assertEquals("12321", text.toString());
+    }
+
+    @Test
+    void testUndoMap() {
+
+    }
+
+    @Test
+    void testUndoArray() {
+
+    }
+
+    @Test
+    void testUndoXml() {
+
+    }
+
+    @Test
+    void testUndoEvents() {
+
+    }
+
+    @Test
+    void testTrackClass() {
+
+    }
+
+    @Test
+    void testTypeScope() {
+
+    }
+
+
 }

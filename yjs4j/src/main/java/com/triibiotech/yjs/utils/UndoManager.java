@@ -15,19 +15,19 @@ import java.util.function.Function;
  */
 @SuppressWarnings("unused")
 public class UndoManager extends ObservableV2<String> {
-    private List<Object> scope;
-    private Doc doc;
-    private Function<Item, Boolean> deleteFilter;
-    private Set<Object> trackedOrigins;
-    private Function<Transaction, Boolean> captureTransaction;
-    private Deque<StackItem> undoStack;
-    private Deque<StackItem> redoStack;
-    private Boolean undoing;
-    private Boolean redoing;
-    private StackItem currStackItem;
-    private Long lastChange;
-    private Boolean ignoreRemoteMapChanges;
-    private Long captureTimeout;
+    public List<Object> scope;
+    public Doc doc;
+    public Function<Item, Boolean> deleteFilter;
+    public Set<Object> trackedOrigins;
+    public Function<Transaction, Boolean> captureTransaction;
+    public Deque<StackItem> undoStack;
+    public Deque<StackItem> redoStack;
+    public Boolean undoing;
+    public Boolean redoing;
+    public StackItem currStackItem;
+    public Long lastChange;
+    public Boolean ignoreRemoteMapChanges;
+    public Long captureTimeout;
 
     public UndoManager(Object typeScope, UndoManagerOptions options) {
         try {
@@ -65,7 +65,7 @@ public class UndoManager extends ObservableV2<String> {
     public void afterTransactionHandler(Transaction transaction) {
         // 只跟踪特定事务
         if (!this.captureTransaction.apply(transaction)
-                || scope.stream().noneMatch(type -> transaction.getChangedParentTypes().containsKey((AbstractType<?>) type) || type == doc)
+                || scope.stream().noneMatch(type -> type == doc || (type instanceof AbstractType && transaction.getChangedParentTypes().containsKey((AbstractType<?>) type)))
                 || (!trackedOrigins.contains(transaction.getOrigin()) &&
                 (transaction.getOrigin() == null || !trackedOrigins.contains(transaction.getOrigin().getClass())))) {
             return;

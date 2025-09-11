@@ -67,7 +67,7 @@ public class YMap<Type> extends AbstractType<YMapEvent> {
     }
 
     @Override
-    public Object toJson() {
+    public Map<String, Object> toJson() {
         if (doc == null) {
             EncodingUtil.log.warn("Invalid access: Add Yjs type to a document before reading data.");
         }
