@@ -65,11 +65,28 @@ public class TestYInstance extends Doc {
      * Receive a message from another client. This message is only appended to the list of receiving messages.
      * TestConnector decides when this client actually reads this message.
      *
-     * @param {Uint8Array} message
+     * @param {Uint8Array}    message
      * @param {TestYInstance} remoteClient
      */
-    public void _receive (byte[] message, TestYInstance remoteClient) {
+    public void _receive(byte[] message, TestYInstance remoteClient) {
         // map.setIfUndefined(this.receiving, remoteClient, () => /** @type {Array<Uint8Array>} */ ([])).push(message)
         this.receiving.computeIfAbsent(remoteClient, k -> new ArrayList<>()).add(message);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        TestYInstance that = (TestYInstance) o;
+        return userID == that.userID;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), userID);
     }
 }

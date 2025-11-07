@@ -13,12 +13,12 @@ import java.util.Base64;
 
 import static org.mockito.Mockito.*;
 
-class WebSocketHandlerTest {
+class DocWebSocketHandlerTest {
 
     @Mock
     private WebSocketSession session;
 
-    private WebSocketHandler handler;
+    private DocWebSocketHandler handler;
 
     /* 消息的base64编码 */
     String request1 = "AALzAwEBuZqH/wMCKAEJcmV2aXNpb25zL3JldmlzaW9uLWQ4OTI5OWQyLTM5ZmQtNGRlMy05OTYxLTMyYzdiM2ExYWQ3Mi0wAXYMAmlkdy9yZXZpc2lvbi1kODkyOTlkMi0zOWZkLTRkZTMtOTk2MS0zMmM3YjNhMWFkNzItMAR0eXBldwZpbnNlcnQEZnJvbX0DAnRvfQQHY29udGVudHcBMQ1yZWxhdGl2ZVN0YXJ0fQALcmVsYXRpdmVFbmR9AQ9oaWdobGlnaHRSYW5nZXN1AXYDBGZyb219AwJ0b30EB2NvbnRlbnR3ATEPb3JpZ2luYWxDb250ZW50dwAGbm9kZUlkdyRkODkyOTlkMi0zOWZkLTRkZTMtOTk2MS0zMmM3YjNhMWFkNzIEdXNlcnYFAmlkdwdkZWZhdWx0BG5hbWV3Ceadjua4r+a+swVjb2xvcncHIzk2Q0VCNAZhdmF0YXJ3dGh0dHBzOi8vY21tcy1kZXYuZS1kc3Blbi5jb20vZGV2LWFwaS9wcm9maWxlL2NtbXMvcHVibGljL2F2YXRhci9jOWI1MWM3YS1kYWQ1LTQ2NjUtYjg0Mi0zMmVjNTFhNjg3ZjMvYW9zcjItNmQ5cDkuZ2lmBnVzZXJJZH0BCXRpbWVzdGFtcHtCeYfUh8yAAAA=";
@@ -27,7 +27,7 @@ class WebSocketHandlerTest {
     @BeforeEach
     void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-        handler = new WebSocketHandler();
+        handler = new DocWebSocketHandler();
         when(session.getUri()).thenReturn(new URI("ws://localhost:9002/tiptap-demo"));
         when(session.getId()).thenReturn("test-session-id");
         when(session.isOpen()).thenReturn(true);

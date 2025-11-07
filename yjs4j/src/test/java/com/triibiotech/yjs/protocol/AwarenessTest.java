@@ -1,12 +1,16 @@
 package com.triibiotech.yjs.protocol;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.triibiotech.yjs.protocol.awareness.Awareness;
 import com.triibiotech.yjs.protocol.awareness.AwarenessEventParams;
 import com.triibiotech.yjs.utils.Doc;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +44,7 @@ public class AwarenessTest {
 
                 if (!allClients.isEmpty()) {
                     byte[] enc = aw1.encodeAwarenessUpdate(allClients, null);
-                    aw2.applyAwarenessUpdate(enc, "custom");
+                    aw2.applyAwarenessUpdate(enc, null);
                 }
             }
         });
@@ -58,7 +62,7 @@ public class AwarenessTest {
         });
 
         // Test 1: Set initial state
-        Map<String, Object> state1 = new HashMap<>();
+        JSONObject state1 = new JSONObject();
         state1.put("x", 3);
         aw1.setLocalState(state1);
 
@@ -66,7 +70,7 @@ public class AwarenessTest {
         Thread.sleep(100);
 
         // Verify state propagation
-        Map<String, Object> remoteState = (Map<String, Object>) aw2.getStates().get(0L);
+        JSONObject remoteState = aw2.getStates().get(0L);
         Assertions.assertEquals(state1.get("x"), remoteState.get("x"));
         Assertions.assertEquals(1L, aw2.getMeta(0).clock());
         Assertions.assertTrue(lastChange[0].added.contains(0L), "Should have added client 0");
@@ -78,7 +82,7 @@ public class AwarenessTest {
         lastChange[0] = null;
         lastChangeLocal[0] = null;
 
-        Map<String, Object> state2 = new HashMap<>();
+        JSONObject state2 = new JSONObject();
         state2.put("x", 4);
         aw1.setLocalState(state2);
 
@@ -128,7 +132,7 @@ public class AwarenessTest {
         Awareness awareness = new Awareness(doc);
 
         // Set initial state
-        Map<String, Object> initialState = new HashMap<>();
+        JSONObject initialState = new JSONObject();
         initialState.put("user", "test-user");
         awareness.setLocalState(initialState);
 
@@ -147,7 +151,7 @@ public class AwarenessTest {
 
         // Test timeout removal with mock remote client
         long remoteClientId = 999L;
-        awareness.states.put(remoteClientId, Map.of("user", "remote"));
+        awareness.states.put(remoteClientId, JSONObject.from(Map.of("user", "remote")));
         awareness.meta.put(remoteClientId, new Awareness.MetaClientState(1,
                 System.currentTimeMillis() - Awareness.OUTDATED_TIMEOUT - 1000)); // Expired
 

@@ -1,6 +1,8 @@
 package com.triibiotech.yjs.structs;
 
-import com.triibiotech.yjs.utils.*;
+import com.triibiotech.yjs.utils.DSEncoder;
+import com.triibiotech.yjs.utils.ID;
+import com.triibiotech.yjs.utils.Transaction;
 
 /**
  * Garbage collected struct - represents deleted content

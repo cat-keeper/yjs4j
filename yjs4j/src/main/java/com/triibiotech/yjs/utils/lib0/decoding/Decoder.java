@@ -181,16 +181,6 @@ public class Decoder {
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
-    public static void main(String[] args) {
-        String s = "你好，世界！";
-        Encoder encoder = Encoder.createEncoder();
-        Encoder.writeVarString(encoder, s);
-        byte[] bytes = Encoder.toUint8Array(encoder);
-        Decoder decoder = Decoder.createDecoder(bytes);
-        String s2 = Decoder.readVarString(decoder);
-        System.out.println(s2);
-    }
-
     public static byte[] readTerminatedUint8Array(Decoder decoder) {
         Encoder encoder = Encoder.createEncoder();
         int b;

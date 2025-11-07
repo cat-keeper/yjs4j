@@ -15,22 +15,22 @@ import java.util.*;
  * @date 2025/07/29  09:17:12
  */
 @SuppressWarnings("unused")
-public class AbstractType<EventType extends YEvent<?>> {
+public abstract class AbstractType<EventType extends YEvent<?>> {
 
     /**
      * The item that contains this type (if it's nested)
      */
-    protected Item item = null;
+    public Item item = null;
 
     /**
      * Map of key-value pairs for map-like types
      */
-    protected Map<String, Item> map = new HashMap<>();
+    public Map<String, Item> map = new HashMap<>();
 
     /**
      * The first item in the list for array-like types
      */
-    protected Item start = null;
+    public Item start = null;
 
     /**
      * The document this type belongs to
@@ -40,22 +40,22 @@ public class AbstractType<EventType extends YEvent<?>> {
     /**
      * The length of this type
      */
-    protected long length = 0;
+    public long length = 0;
 
     /**
      * Event handlers
      */
-    protected EventHandler<EventType, Transaction> eventHandler = EventHandler.createEventHandler();
+    public EventHandler<EventType, Transaction> eventHandler = EventHandler.createEventHandler();
 
     /**
      * Deep event handlers
      */
-    protected EventHandler<List<YEvent<?>>, Transaction> deepEventHandler = EventHandler.createEventHandler();
+    public EventHandler<List<YEvent<?>>, Transaction> deepEventHandler = EventHandler.createEventHandler();
 
     /**
      * Search markers for efficient indexing
      */
-    protected List<ArraySearchMarker> searchMarker = null;
+    public List<ArraySearchMarker> searchMarker = null;
 
 
     public AbstractType() {
@@ -136,6 +136,7 @@ public class AbstractType<EventType extends YEvent<?>> {
     static void logDocInvalidAccess() {
         EncodingUtil.log.warn("Invalid access: Add Yjs type to a document before reading data.");
     }
+
     /**
      * Accumulate all (list) children of a type and return them as an Array.
      *
@@ -262,6 +263,24 @@ public class AbstractType<EventType extends YEvent<?>> {
      * Convert to JSON
      */
     public Object toJson() {
+        if (this.map != null) {
+            Map<String, Object> map = new HashMap<>();
+            for (Map.Entry<String, Item> entry : this.map.entrySet()) {
+                Item item = entry.getValue();
+                if (!item.isDeleted()) {
+                    Object[] content = item.content.getContent();
+                    if (content.length > 0) {
+                        Object o = content[Math.toIntExact(item.length - 1)];
+                        if(o instanceof AbstractType<?>) {
+                            map.put(entry.getKey(), ((AbstractType<?>) o).toJson());
+                        } else {
+                            map.put(entry.getKey(), o);
+                        }
+                    }
+                }
+            }
+            return map;
+        }
         return null;
     }
 
@@ -485,8 +504,8 @@ public class AbstractType<EventType extends YEvent<?>> {
     /**
      * Get subdocuments contained in this type
      */
-    public java.util.LinkedHashSet<Doc> getSubDocs() {
-        java.util.LinkedHashSet<Doc> subDocs = new java.util.LinkedHashSet<>();
+    public LinkedHashSet<Doc> getSubDocs() {
+        LinkedHashSet<Doc> subDocs = new LinkedHashSet<>();
 
         // Iterate through all items to find subdocuments
         Item item = start;

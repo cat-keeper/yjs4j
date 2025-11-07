@@ -23,12 +23,15 @@ public class UpdateProcessor {
     }
 
     public static void logUpdateV2(byte[] update, Class<? extends DSDecoder> decoderClass) {
-        if (decoderClass == null) {
-            decoderClass = UpdateDecoderV2.class;
-        }
+        boolean useV2Decoder = decoderClass != UpdateDecoderV2.class;
         try {
             List<AbstractStruct> structs = new ArrayList<>();
-            DSDecoder updateDecoder = decoderClass.getDeclaredConstructor(Decoder.class).newInstance(Decoder.createDecoder(update));
+            DSDecoder updateDecoder;
+            if(useV2Decoder) {
+                updateDecoder = new UpdateDecoderV2(Decoder.createDecoder(update));
+            } else {
+                updateDecoder = new UpdateDecoderV1(Decoder.createDecoder(update));
+            }
             LazyStructReader lazyDecoder = new LazyStructReader(updateDecoder, false);
             for (AbstractStruct curr = lazyDecoder.current(); curr != null; curr = lazyDecoder.next()) {
                 structs.add(curr);
@@ -217,87 +220,83 @@ public class UpdateProcessor {
 
     public static byte[] mergeUpdatesV2(List<byte[]> updates, Class<? extends DSDecoder> YDecoder, Class<? extends DSEncoder> YEncoder) {
         if (updates.size() == 1) {
-            return updates.get(0);
+            return updates.getFirst();
         }
-        if (YEncoder == null) {
-            YEncoder = UpdateEncoderV2.class;
-        }
-        if (YDecoder == null) {
-            YDecoder = UpdateDecoderV2.class;
-        }
-
-        Class<? extends DSDecoder> finalYDecoder = YDecoder;
+        boolean useV2Encoder = YEncoder != UpdateEncoderV1.class;
+        boolean useV2Decoder = YDecoder != UpdateDecoderV1.class;
         List<DSDecoder> updateDecoders = updates.stream().map(data -> {
             Decoder decoder = Decoder.createDecoder(data);
-            try {
-                return finalYDecoder.getDeclaredConstructor(Decoder.class).newInstance(decoder);
-            } catch (Exception e) {
-                throw new RuntimeException("Cannot instantiate decoder", e);
+            if (useV2Decoder) {
+                return new UpdateDecoderV2(decoder);
+            } else {
+                return new UpdateDecoderV1(decoder);
             }
-        }).collect(Collectors.toList());
-
-        // 同理创建 encoder
-        DSEncoder updateEncoder;
-        try {
-            updateEncoder = YEncoder.getDeclaredConstructor().newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("Cannot instantiate encoder", e);
-        }
+        }).toList();
 
         List<LazyStructReader> lazyStructDecoders = updateDecoders.stream().map(dec -> new LazyStructReader(dec, true)).collect(Collectors.toList());
 
         LazyStruct currWrite = null;
+
+        DSEncoder updateEncoder;
+        if (useV2Encoder) {
+            updateEncoder = new UpdateEncoderV2();
+        } else {
+            updateEncoder = new UpdateEncoderV1();
+        }
+
         LazyStructWriter lazyStructEncoder = new LazyStructWriter(updateEncoder);
 
         while (true) {
             lazyStructDecoders = lazyStructDecoders.stream()
                     .filter(reader -> reader.current() != null)
                     .sorted((dec1, dec2) -> {
-                AbstractStruct s1 = dec1.current();
-                AbstractStruct s2 = dec2.current();
-                if (s1.getId().getClient() == s2.getId().getClient()) {
-                    long clockDiff = s1.getId().getClock() - s2.getId().getClock();
-                    return clockDiff != 0 ? Math.toIntExact(clockDiff) : (s1.getClass().equals(s2.getClass()) ? 0 : (s1 instanceof Skip ? 1 : -1));
-                }
-                return Math.toIntExact(s2.getId().getClient() - s1.getId().getClient());
-            }).toList();
+                        AbstractStruct s1 = dec1.current();
+                        AbstractStruct s2 = dec2.current();
+                        if (s1.getId().getClient() == s2.getId().getClient()) {
+                            long clockDiff = s1.getId().getClock() - s2.getId().getClock();
+                            return clockDiff != 0 ? Math.toIntExact(clockDiff) : (s1.getClass().equals(s2.getClass()) ? 0 : (s1 instanceof Skip ? 1 : -1));
+                        }
+                        return Math.toIntExact(s2.getId().getClient() - s1.getId().getClient());
+                    }).toList();
 
             if (lazyStructDecoders.isEmpty()) {
                 break;
             }
 
-            LazyStructReader currDecoder = lazyStructDecoders.get(0);
+            LazyStructReader currDecoder = lazyStructDecoders.getFirst();
             long firstClient = currDecoder.current().getId().getClient();
 
             if (currWrite != null) {
                 AbstractStruct curr = currDecoder.current();
                 boolean iterated = false;
 
-                while (curr != null && curr.getId().getClock() + curr.getLength() <= currWrite.struct.getId().getClock() + currWrite.struct.getLength() && curr.getId().getClient() >= currWrite.struct.getId().getClient()) {
+                while (curr != null && curr.id.clock + curr.length <= currWrite.struct.id.clock + currWrite.struct.length && curr.id.client >= currWrite.struct.id.client) {
                     curr = currDecoder.next();
                     iterated = true;
                 }
 
-                if (curr == null || curr.getId().getClient() != firstClient || (iterated && curr.getId().getClock() > currWrite.struct.getId().getClock() + currWrite.struct.getLength())) {
+                if (curr == null
+                        || curr.id.client != firstClient
+                        || (iterated && curr.id.clock > currWrite.struct.id.clock + currWrite.struct.length)) {
                     continue;
                 }
 
-                if (firstClient != currWrite.struct.getId().getClient()) {
+                if (firstClient != currWrite.struct.id.client) {
                     writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset);
                     currWrite = new LazyStruct(curr, 0);
                     currDecoder.next();
                 } else {
-                    if (currWrite.struct.getId().getClock() + currWrite.struct.getLength() < curr.getId().getClock()) {
+                    if (currWrite.struct.id.clock + currWrite.struct.length < curr.id.clock) {
                         if (currWrite.struct instanceof Skip) {
                             currWrite.struct.length = curr.id.clock + curr.length - currWrite.struct.id.clock;
                         } else {
                             writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset);
                             long diff = curr.id.clock - currWrite.struct.id.clock - currWrite.struct.length;
-                            Skip skip = new Skip(ID.createId(firstClient, currWrite.struct.getId().getClock() + currWrite.struct.getLength()), diff);
-                            currWrite = new LazyStruct(skip, 0);
+                            Skip struct = new Skip(ID.createId(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff);
+                            currWrite = new LazyStruct(struct, 0);
                         }
                     } else {
-                        long diff = currWrite.struct.getId().getClock() + currWrite.struct.getLength() - curr.getId().getClock();
+                        long diff = currWrite.struct.id.clock + currWrite.struct.length - curr.id.clock;
                         if (diff > 0) {
                             if (currWrite.struct instanceof Skip) {
                                 currWrite.struct.length -= diff;
@@ -318,7 +317,7 @@ public class UpdateProcessor {
             }
 
             AbstractStruct next;
-            while ((next = currDecoder.current()) != null && next.getId().getClient() == firstClient && next.getId().getClock() == currWrite.struct.getId().getClock() + currWrite.struct.getLength() && !(next instanceof Skip)) {
+            while ((next = currDecoder.current()) != null && next.id.client == firstClient && next.id.clock == currWrite.struct.id.clock + currWrite.struct.length && !(next instanceof Skip)) {
                 writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset);
                 currWrite = new LazyStruct(next, 0);
                 currDecoder.next();

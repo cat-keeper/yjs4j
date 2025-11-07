@@ -21,7 +21,7 @@ public class YXmlEvent extends YEvent<YXmlFragment> {
     /**
      * Set of all changed attributes
      */
-    public final java.util.Set<String> attributesChanged = new java.util.LinkedHashSet<>();
+    public final Set<String> attributesChanged = new java.util.LinkedHashSet<>();
 
     public YXmlEvent(YXmlFragment target, Set<String> subs, Transaction transaction) {
         super(target, transaction);

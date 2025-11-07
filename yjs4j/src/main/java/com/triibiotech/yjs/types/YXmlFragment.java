@@ -209,8 +209,12 @@ public class YXmlFragment extends AbstractType<YXmlEvent> {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof YXmlFragment that)) return false;
-        if (!super.equals(o)) return false;
+        if (!(o instanceof YXmlFragment that)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
         return Objects.equals(prelimContent, that.prelimContent);
     }
 

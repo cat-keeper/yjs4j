@@ -1,6 +1,9 @@
 package com.triibiotech.yjs.structs;
 
-import com.triibiotech.yjs.utils.*;
+import com.triibiotech.yjs.utils.DSDecoder;
+import com.triibiotech.yjs.utils.DSEncoder;
+import com.triibiotech.yjs.utils.StructStore;
+import com.triibiotech.yjs.utils.Transaction;
 
 import java.util.Arrays;
 

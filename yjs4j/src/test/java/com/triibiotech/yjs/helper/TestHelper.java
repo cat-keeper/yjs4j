@@ -14,9 +14,7 @@ import org.junit.jupiter.api.Assertions;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +32,10 @@ public class TestHelper {
         }
     }
 
-    public static Map<String, Object> init(int users, Function<TestYInstance, ?> initTestObject) {
+    public static Map<String, Object> init(Integer users, Function<TestYInstance, ?> initTestObject) {
+        if(users == null) {
+            users = 5;
+        }
         Map<String, Object> result = new HashMap<>();
         List<TestYInstance> usersResult = new ArrayList<>();
         result.put("users", usersResult);
@@ -62,7 +63,7 @@ public class TestHelper {
 
     public static void compare(List<TestYInstance> users) {
         users.forEach(TestYInstance::connect);
-        while (users.get(0).tc.flushAllMessages()) {
+        while (users.getFirst().tc.flushAllMessages()) {
             // do nothing
         }
         List<TestYInstance> mergedDocs = users.stream().map(user -> {

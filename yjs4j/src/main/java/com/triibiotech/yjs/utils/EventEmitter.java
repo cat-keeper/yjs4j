@@ -1,16 +1,18 @@
 package com.triibiotech.yjs.utils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class EventEmitter<T> {
     private final Map<String, List<Consumer<T>>> listeners = new ConcurrentHashMap<>();
-    
+
     public void on(String event, Consumer<T> listener) {
         listeners.computeIfAbsent(event, k -> new ArrayList<>()).add(listener);
     }
-    
+
     public void off(String event, Consumer<T> listener) {
         List<Consumer<T>> eventListeners = listeners.get(event);
         if (eventListeners != null) {
@@ -20,7 +22,7 @@ public class EventEmitter<T> {
             }
         }
     }
-    
+
     public void emit(String event, T data) {
         List<Consumer<T>> eventListeners = listeners.get(event);
         if (eventListeners != null) {
@@ -33,11 +35,11 @@ public class EventEmitter<T> {
             }
         }
     }
-    
+
     public void removeAllListeners() {
         listeners.clear();
     }
-    
+
     public void clear() {
         listeners.clear();
     }

@@ -1,5 +1,8 @@
 package com.triibiotech.yjs.utils;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.triibiotech.yjs.structs.AbstractContent;
 import com.triibiotech.yjs.structs.ContentDoc;
 import com.triibiotech.yjs.structs.Item;
@@ -182,33 +185,36 @@ public class Doc extends ObservableV2<String> {
      */
     @SuppressWarnings("unchecked")
     public <T extends AbstractType<?>> T get(String name, Class<T> typeConstructor) {
-        AbstractType<?> type = this.share.computeIfAbsent(name, k -> {
-            try {
-                T t = typeConstructor.getDeclaredConstructor().newInstance();
-                t.integrate(this, null);
-                return t;
-            } catch (Exception e) {
-                System.err.println("Failed to instantiate type: " + e);
-                throw new RuntimeException("Failed to instantiate type: " + typeConstructor.getSimpleName(), e);
+        AbstractType<?> existing = share.get(name);
+        if (existing == null) {
+            // 首次创建
+            if (typeConstructor == null || typeConstructor == (Class<?>) AbstractType.class) {
+                existing = new PlaceholderType();
+            } else {
+                existing = createInstance(typeConstructor);
             }
-        });
-        if(type.getClass() == typeConstructor) {
-            return (T) type;
-        }
-        if(AbstractType.class.isAssignableFrom(typeConstructor)) {
-            try {
-                T t = typeConstructor.getDeclaredConstructor().newInstance();
-                type.copyPropertiesTo(t);
-                return t;
-            } catch (Exception e) {
-                System.err.println("Failed to instantiate type: " + e);
-                throw new RuntimeException("Failed to instantiate type: " + typeConstructor.getSimpleName(), e);
+            existing.integrate(this, null);
+            share.put(name, existing);
+        } else if (typeConstructor != null && existing instanceof PlaceholderType) {
+            if(typeConstructor == (Class<?>) AbstractType.class) {
+                return (T) existing;
             }
+            // 类型转换：从占位符转为具体类型
+            T newInstance = createInstance(typeConstructor);
+            BeanUtil.copyProperties(existing, newInstance);
+            share.put(name, newInstance);
+            existing = newInstance;
         }
-        throw new IllegalStateException(
-                "Type with the name " + name + " has already been defined with a different constructor: existing="
-                        + type.getClass().getSimpleName() + ", expected=" + typeConstructor.getSimpleName()
-        );
+        return (T) existing;
+    }
+
+    private <T extends AbstractType<?>> T createInstance(Class<T> clazz) {
+        try {
+            return clazz.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            System.err.println("Failed to instantiate type: " + e);
+            throw new RuntimeException("Failed to instantiate type: " + clazz.getSimpleName(), e);
+        }
     }
 
     public <T> YArray<T> getArray(String name) {
@@ -239,6 +245,40 @@ public class Doc extends ObservableV2<String> {
             doc.put(key, value.toJson());
         });
         return doc;
+    }
+
+    public Map<String, Object> getContent() {
+        Map<String, Object> doc = new HashMap<>();
+        this.share.forEach((key, value) -> {
+            Class<? extends AbstractType> aClass = analysisType(value);
+            AbstractType type = JSON.parseObject(JSON.toJSONString(value), aClass);
+            doc.put(key, type.toJson());
+        });
+        return doc;
+    }
+
+
+    private static Class<? extends AbstractType> analysisType(Object object) {
+        JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(object));
+        if (jsonObject.containsKey("map")) {
+            return YMap.class;
+        }
+        if (jsonObject.containsKey("start")) {
+            return YText.class;
+        }
+        if (jsonObject.containsKey("prelimContent") && jsonObject.containsKey("searchMarker")) {
+            return YArray.class;
+        }
+        if (jsonObject.containsKey("prelimContent")) {
+            return YXmlFragment.class;
+        }
+        if (jsonObject.containsKey("nodeName")) {
+            return YXmlElement.class;
+        }
+        if (jsonObject.containsKey("hookName")) {
+            return YXmlHook.class;
+        }
+        return YText.class;
     }
 
     @Override

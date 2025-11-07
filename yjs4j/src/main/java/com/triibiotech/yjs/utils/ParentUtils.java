@@ -1,12 +1,16 @@
 package com.triibiotech.yjs.utils;
 
-import com.triibiotech.yjs.types.AbstractType;
 import com.triibiotech.yjs.structs.Item;
+import com.triibiotech.yjs.types.AbstractType;
 
 /**
  * Utility functions for parent-child relationships in Yjs documents.
  * Matches the functionality of isParentOf.js from the original Yjs implementation.
+ *
+ * @author zbs
+ * @date 2025/10/28  08:53:04
  */
+@SuppressWarnings("unused")
 public class ParentUtils {
 
     /**

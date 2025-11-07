@@ -355,7 +355,7 @@ public class DeleteSet {
 
     public static void sortAndMergeDeleteSet(DeleteSet ds) {
         ds.clients.values().forEach(dels -> {
-            dels.sort((a, b) -> Math.toIntExact(a.clock - b.clock));
+            dels.sort(Comparator.comparing(a -> a.clock));
             int i, j;
             for (i = 1, j = 1; i < dels.size(); i++) {
                 DeleteItem left = dels.get(j - 1);
@@ -370,7 +370,7 @@ public class DeleteSet {
                 }
             }
             while (dels.size() > j) {
-                dels.remove(dels.size() - 1);
+                dels.removeLast();
             }
         });
     }

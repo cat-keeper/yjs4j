@@ -1,11 +1,13 @@
 package com.triibiotech.yjs.protocol.awareness;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
+import com.alibaba.fastjson2.JSONObject;
 import com.triibiotech.yjs.utils.Doc;
 import com.triibiotech.yjs.utils.Observable;
 import com.triibiotech.yjs.utils.lib0.decoding.Decoder;
 import com.triibiotech.yjs.utils.lib0.encoding.Encoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -25,12 +27,18 @@ public class Awareness extends Observable<String> {
     /**
      * Maps from client id to client state
      */
-    public final Map<Long, Object> states = new ConcurrentHashMap<>();
+    public final Map<Long, JSONObject> states = new ConcurrentHashMap<>();
     public final Map<Long, MetaClientState> meta = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledFuture<?> checkInterval;
 
     public static final long OUTDATED_TIMEOUT = 30000;
+
+    public static final String UPDATE_EVENT_NAME = "update";
+    public static final String CHANGE_EVENT_NAME = "change";
+
+    static final Logger log = LoggerFactory.getLogger("Awareness");
+
 
     /**
      * Meta client state
@@ -48,7 +56,7 @@ public class Awareness extends Observable<String> {
         this.checkInterval = scheduler.scheduleAtFixedRate(() -> {
             try {
                 long now = System.currentTimeMillis();
-                Object localState = getLocalState();
+                JSONObject localState = getLocalState();
 
                 // Renew local state if it's getting stale (after 15 seconds)
                 if (localState != null) {
@@ -78,7 +86,7 @@ public class Awareness extends Observable<String> {
         }, OUTDATED_TIMEOUT / 10, OUTDATED_TIMEOUT / 10, TimeUnit.MILLISECONDS);
 
         doc.on("destroy", this::destroy);
-        setLocalState(new HashMap<>());
+        setLocalState(JSONObject.from(new HashMap<>()));
     }
 
     /**
@@ -98,14 +106,14 @@ public class Awareness extends Observable<String> {
     /**
      * Get local state
      */
-    public Object getLocalState() {
+    public JSONObject getLocalState() {
         return states.get(clientId);
     }
 
     /**
      * Set local state
      */
-    public void setLocalState(Object state) {
+    public void setLocalState(JSONObject state) {
         MetaClientState currLocalMeta = meta.get(clientId);
         long clock = currLocalMeta == null ? 0L : currLocalMeta.clock + 1;
         Object prevState = states.get(clientId);
@@ -135,9 +143,9 @@ public class Awareness extends Observable<String> {
         }
 
         if (!added.isEmpty() || !filteredUpdated.isEmpty() || !removed.isEmpty()) {
-            emit("change", new AwarenessEventParams(added, filteredUpdated, removed, "local"));
+            emit(CHANGE_EVENT_NAME, new AwarenessEventParams(added, filteredUpdated, removed, "local"));
         }
-        emit("update", new AwarenessEventParams(added, updated, removed, "local"));
+        emit(UPDATE_EVENT_NAME, new AwarenessEventParams(added, updated, removed, "local"));
     }
 
     /**
@@ -146,8 +154,7 @@ public class Awareness extends Observable<String> {
     public void setLocalStateField(String field, Object value) {
         Object state = getLocalState();
         if (state != null) {
-            Map<String, Object> stateMap = JSON.parseObject(JSON.toJSONString(state), new TypeReference<Map<String, Object>>() {
-            });
+            JSONObject stateMap = JSON.parseObject(JSON.toJSONString(state));
             stateMap.put(field, value);
             setLocalState(stateMap);
         }
@@ -156,7 +163,7 @@ public class Awareness extends Observable<String> {
     /**
      * Get all states
      */
-    public Map<Long, Object> getStates() {
+    public Map<Long, JSONObject> getStates() {
         return new HashMap<>(states);
     }
 
@@ -186,12 +193,12 @@ public class Awareness extends Observable<String> {
         }
 
         if (!removed.isEmpty()) {
-            this.emit("change", new AwarenessEventParams(new ArrayList<>(), new ArrayList<>(), removed, origin));
-            this.emit("update", new AwarenessEventParams(new ArrayList<>(), new ArrayList<>(), removed, origin));
+            this.emit(CHANGE_EVENT_NAME, new AwarenessEventParams(new ArrayList<>(), new ArrayList<>(), removed, origin));
+            this.emit(UPDATE_EVENT_NAME, new AwarenessEventParams(new ArrayList<>(), new ArrayList<>(), removed, origin));
         }
     }
 
-    public byte[] encodeAwarenessUpdate(List<Long> clients, Map<Long, Object> states) {
+    public byte[] encodeAwarenessUpdate(List<Long> clients, Map<Long, JSONObject> states) {
         if (states == null) {
             states = this.states;
         }
@@ -200,7 +207,7 @@ public class Awareness extends Observable<String> {
         Encoder.writeVarUint(encoder, len);
         for (int i = 0; i < len; i++) {
             Long clientId = clients.get(i);
-            Object state = states.get(clientId);
+            JSONObject state = states.get(clientId);
             long clock = meta.get(clientId).clock;
             Encoder.writeVarUint(encoder, clientId);
             Encoder.writeVarUint(encoder, clock);
@@ -239,7 +246,7 @@ public class Awareness extends Observable<String> {
             long clientId = Decoder.readVarUint(decoder);
             long clock = Decoder.readVarUint(decoder);
             String json = Decoder.readVarString(decoder);
-            Object state = "null".equals(json) ? null : JSON.parse(json);
+            JSONObject state = "null".equals(json) ? null : JSON.parseObject(json);
 
             MetaClientState clientMeta = meta.get(clientId) == null ? null : meta.get(clientId);
             Object prevState = states.get(clientId);
@@ -272,14 +279,14 @@ public class Awareness extends Observable<String> {
         }
 
         if (!added.isEmpty() || !filteredUpdated.isEmpty() || !removed.isEmpty()) {
-            emit("change",
+            emit(CHANGE_EVENT_NAME,
                     new AwarenessEventParams(added, filteredUpdated, removed, null),
                     origin
             );
         }
 
         if (!added.isEmpty() || !updated.isEmpty() || !removed.isEmpty()) {
-            emit("update", new AwarenessEventParams(added, updated, removed, null),
+            emit(UPDATE_EVENT_NAME, new AwarenessEventParams(added, updated, removed, null),
                     origin);
         }
     }

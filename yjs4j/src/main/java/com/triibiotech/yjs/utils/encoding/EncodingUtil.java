@@ -32,9 +32,10 @@ public class EncodingUtil {
      * @param clock   Write structs starting with ID(client,clock)
      */
     public static void writeStructs(DSEncoder encoder, List<AbstractStruct> structs, long client, long clock) {
+        structs = structs == null ? Collections.emptyList() : structs;
         // write first id
         // make sure the first id exists
-        clock = Math.max(clock, structs.get(0).getId().getClock());
+        clock = Math.max(clock, structs.getFirst().getId().getClock());
         int startNewStructs = StructStore.findIndexSS(structs, clock);
         // write # encoded structs
         Encoder.writeVarUint(encoder.getRestEncoder(), structs.size() - startNewStructs);
@@ -74,14 +75,12 @@ public class EncodingUtil {
         // Write items with higher client ids first
         // This heavily improves the conflict algorithm.
         sm.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getKey(), a.getKey()))
+                .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> {
                     long client = entry.getKey();
                     long clock = entry.getValue();
                     List<AbstractStruct> clientStructs = store.getClients().get(client);
-                    if (clientStructs != null) {
-                        writeStructs(encoder, clientStructs, client, clock);
-                    }
+                    writeStructs(encoder, clientStructs, client, clock);
                 });
     }
 
@@ -130,13 +129,13 @@ public class EncodingUtil {
                         boolean cantCopyParentInfo = (info & (Binary.BIT7 | Binary.BIT8)) == 0;
                         Item struct = new Item(
                                 ID.createId(client, clock),
-                                null, // left
-                                (info & Binary.BIT8) == Binary.BIT8 ? decoder.readLeftId() : null, // origin
-                                null, // right
-                                (info & Binary.BIT7) == Binary.BIT7 ? decoder.readRightId() : null, // right origin
-                                cantCopyParentInfo ? (decoder.readParentInfo() ? doc.get(decoder.readString(), AbstractType.class) : decoder.readLeftId()) : null, // parent
-                                cantCopyParentInfo && (info & Binary.BIT6) == Binary.BIT6 ? decoder.readString() : null, // parentSub
-                                Item.readItemContent(decoder, info) // item content
+                                null,
+                                (info & Binary.BIT8) == Binary.BIT8 ? decoder.readLeftId() : null,
+                                null,
+                                (info & Binary.BIT7) == Binary.BIT7 ? decoder.readRightId() : null,
+                                cantCopyParentInfo ? (decoder.readParentInfo() ? doc.get(decoder.readString(), AbstractType.class) : decoder.readLeftId()) : null,
+                                cantCopyParentInfo && (info & Binary.BIT6) == Binary.BIT6 ? decoder.readString() : null,
+                                Item.readItemContent(decoder, info)
                         );
                         refs.add(struct);
                         clock += struct.getLength();
@@ -459,7 +458,7 @@ public class EncodingUtil {
                 return UpdateProcessor.mergeUpdatesV2(updates, null, null);
             }
         }
-        return updates.get(0);
+        return updates.getFirst();
     }
 
     /**

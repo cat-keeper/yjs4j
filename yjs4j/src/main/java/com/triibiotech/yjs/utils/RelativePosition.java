@@ -19,6 +19,7 @@ import java.util.Objects;
  * @author zbs
  * @date 2025/07/31  15:49:27
  */
+@SuppressWarnings("unused")
 public class RelativePosition {
 
     /**
@@ -83,7 +84,7 @@ public class RelativePosition {
         this.assoc = assoc;
     }
 
-    public static Map<String, Object> relativePositionToJSON(RelativePosition pos) {
+    public static Map<String, Object> relativePositionToJson(RelativePosition pos) {
         Map<String, Object> json = new HashMap<>();
         if (pos.type != null) {
             json.put("type", pos.type);
@@ -100,7 +101,7 @@ public class RelativePosition {
         return json;
     }
 
-    public static RelativePosition createRelativePositionFromJSON(Map<String, Object> json) {
+    public static RelativePosition createRelativePositionFromJson(Map<String, Object> json) {
         ID type = null;
         if (json.containsKey("type") && json.get("type") instanceof ID) {
             type = (ID) json.get("type");
@@ -201,7 +202,7 @@ public class RelativePosition {
         return createRelativePosition(type, null, assoc);
     }
 
-    public static Encoder writeRelativePosition(Encoder encoder, RelativePosition rpos) {
+    public static void writeRelativePosition(Encoder encoder, RelativePosition rpos) {
         ID type = rpos.type;
         String tName = rpos.tName;
         ID item = rpos.item;
@@ -221,7 +222,6 @@ public class RelativePosition {
             throw new RuntimeException("Unexpected case");
         }
         Encoder.writeVarInt(encoder, assoc);
-        return encoder;
     }
 
     public static byte[] encodeRelativePosition(RelativePosition rpos) {
@@ -233,17 +233,17 @@ public class RelativePosition {
     public static RelativePosition readRelativePosition(Decoder decoder) {
         ID type = null;
         String tName = null;
-        ID itemID = null;
+        ID itemId = null;
         long read = Decoder.readVarUint(decoder);
         if(read == 0) {
-            itemID = ID.readId(decoder);
+            itemId = ID.readId(decoder);
         } else if (read == 1) {
             tName = Decoder.readVarString(decoder);
         } else if (read == 2) {
             type = ID.readId(decoder);
         }
         Long assoc = Decoder.hasContent(decoder) ? Decoder.readVarInt(decoder) : 0L;
-        return new RelativePosition(type, tName, itemID, assoc);
+        return new RelativePosition(type, tName, itemId, assoc);
     }
 
     public static RelativePosition decodeRelativePosition(byte[] data) {
@@ -265,27 +265,27 @@ public class RelativePosition {
      * When calculating the absolute position, we try to follow the "undone deletions". This yields
      * better results for the user who performed undo. However, only the user who performed the undo
      * will get the better results, the other users don't know which operations recreated a deleted
-     * range of content. There is more information in this ticket: https://github.com/yjs/yjs/issues/638
+     * range of content. There is more information in this ticket: <a href="https://github.com/yjs/yjs/issues/638">...</a>
      */
     public static AbsolutePosition createAbsolutePositionFromRelativePosition(RelativePosition rpos, Doc doc, Boolean followUndoneDeletions) {
         if(followUndoneDeletions == null) {
             followUndoneDeletions = true;
         }
         StructStore store = doc.getStore();
-        ID rightID = rpos.getItem();
-        ID typeID = rpos.getType();
-        String tname = rpos.gettName();
+        ID rightId = rpos.getItem();
+        ID typeId = rpos.getType();
+        String tName = rpos.gettName();
         Long assoc = rpos.getAssoc();
 
-        AbstractType<?> type = null;
+        AbstractType<?> type;
         long index = 0L;
 
-        if (rightID != null) {
-            if (store.getState(rightID.getClient()) <= rightID.getClock()) {
+        if (rightId != null) {
+            if (store.getState(rightId.getClient()) <= rightId.getClock()) {
                 return null;
             }
 
-            Map<String, Object> res = followUndoneDeletions ? Item.followRedone(store, rightID) : getItemWithOffset(store, rightID);
+            Map<String, Object> res = followUndoneDeletions ? Item.followRedone(store, rightId) : getItemWithOffset(store, rightId);
             AbstractStruct struct = (AbstractStruct) res.get("item");
             if (!(struct instanceof Item right)) {
                 return null;
@@ -303,16 +303,16 @@ public class RelativePosition {
                 }
             }
         } else {
-            if (tname != null) {
-                type = doc.get(tname, AbstractType.class);
-            } else if (typeID != null) {
-                if (StructStore.getState(store, typeID.getClient()) <= typeID.getClock()) {
+            if (tName != null) {
+                type = doc.get(tName, AbstractType.class);
+            } else if (typeId != null) {
+                if (StructStore.getState(store, typeId.getClient()) <= typeId.getClock()) {
                     // type does not exist yet
                     return null;
                 }
                 AbstractStruct struct = followUndoneDeletions
-                        ? (AbstractStruct) Item.followRedone(store, typeID).get("item")
-                        : store.getItem(typeID);
+                        ? (AbstractStruct) Item.followRedone(store, typeId).get("item")
+                        : store.getItem(typeId);
 
                 if (struct instanceof Item && ((Item) struct).getContent() instanceof ContentType) {
                     type = ((ContentType) ((Item) struct).getContent()).getType();

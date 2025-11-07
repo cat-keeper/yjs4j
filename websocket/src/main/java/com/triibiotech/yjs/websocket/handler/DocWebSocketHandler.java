@@ -1,5 +1,8 @@
 package com.triibiotech.yjs.websocket.handler;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.triibiotech.yjs.protocol.awareness.Awareness;
 import com.triibiotech.yjs.protocol.sync.SyncProtocol;
 import com.triibiotech.yjs.utils.lib0.decoding.Decoder;
 import com.triibiotech.yjs.utils.lib0.encoding.Encoder;
@@ -11,9 +14,7 @@ import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,19 +25,36 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @date 2025/08/01  16:58:29
  */
 @Component
-public class WebSocketHandler extends BinaryWebSocketHandler {
-    static final Logger logger = LoggerFactory.getLogger("Yjs");
-
+public class DocWebSocketHandler extends BinaryWebSocketHandler {
+    static final Logger log = LoggerFactory.getLogger("DocWebSocketHandler");
+    /**
+     * 数据同步消息
+     */
     public static final int MESSAGE_SYNC = 0;
+    /**
+     * 意识消息
+     */
     public static final int MESSAGE_AWARENESS = 1;
-
-    private final Map<String, WSSharedDoc> docs = new ConcurrentHashMap<>();
+    /**
+     * docId -> doc
+     */
+    private static final Map<Integer, WSSharedDoc> DOCUMENTS = new ConcurrentHashMap<>();
+    /**
+     * userId -> docId
+     */
+    private static final Map<Integer, Integer> USER_DOCUMENTS = new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
+    /**
+     * 心跳处理器
+     */
     private ScheduledFuture<?> pingInterval;
-
+    /**
+     * 心跳响应状态
+     */
     private final AtomicBoolean pongReceived = new AtomicBoolean(true);
+
 
     @Override
     protected void handlePongMessage(@Nonnull WebSocketSession session, @Nonnull PongMessage message) throws Exception {
@@ -46,10 +64,12 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(@Nonnull WebSocketSession session) {
-        String docName = extractDocName(session);
-        WSSharedDoc doc = getDoc(docName);
+        Map<String, Object> attributes = session.getAttributes();
+        Integer documentId = (Integer) attributes.get("documentId");
+        WSSharedDoc doc = getDoc(documentId);
+        USER_DOCUMENTS.put((Integer) attributes.get("userId"), documentId);
         doc.connections.put(session, new LinkedHashSet<>());
-
+        // 心跳
         this.pingInterval = scheduler.scheduleAtFixedRate(() -> {
             try {
                 if (!pongReceived.get()) {
@@ -77,37 +97,33 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
         Encoder.writeVarUint(encoder, MESSAGE_SYNC);
         SyncProtocol.writeSyncStep1(encoder, doc);
         send(doc, session, Encoder.toUint8Array(encoder));
-        Map<Long, Object> awarenessStates = doc.awareness.getStates();
+        Map<Long, JSONObject> awarenessStates = doc.awareness.getStates();
         if (!awarenessStates.isEmpty()) {
             Encoder awarenessEncoder = Encoder.createEncoder();
             Encoder.writeVarUint(awarenessEncoder, MESSAGE_AWARENESS);
             Encoder.writeVarUint8Array(awarenessEncoder, doc.awareness.encodeAwarenessUpdate(awarenessStates.keySet().stream().toList(), null));
             send(doc, session, Encoder.toUint8Array(encoder));
         }
-        String ip = session.getRemoteAddress().getAddress().getHostAddress();
-        logger.info("New connection from {} to {}", ip, docName);
+        String ip = Objects.requireNonNull(session.getRemoteAddress()).getAddress().getHostAddress();
+        log.info("New connection from {} to {}", ip, documentId);
     }
 
-    private String extractDocName(WebSocketSession session) {
-        String path = session.getUri().getPath();
-        return path.substring(1);
-    }
-
-    private WSSharedDoc getDoc(String docName) {
-        WSSharedDoc doc = docs.get(docName);
+    private static WSSharedDoc getDoc(Integer documentId) {
+        WSSharedDoc doc = DOCUMENTS.get(documentId);
         if (doc != null) {
             return doc;
         }
-        doc = new WSSharedDoc(docName);
+        doc = new WSSharedDoc(documentId);
         doc.gc = true;
-        this.docs.put(docName, doc);
+        DOCUMENTS.put(documentId, doc);
         return doc;
     }
 
     @Override
     public void handleBinaryMessage(@Nonnull WebSocketSession session, BinaryMessage message) {
-        String docName = extractDocName(session);
-        WSSharedDoc doc = getDoc(docName);
+        Map<String, Object> attributes = session.getAttributes();
+        Integer documentId = (Integer) attributes.get("documentId");
+        WSSharedDoc doc = getDoc(documentId);
 
         Encoder encoder = Encoder.createEncoder();
         Decoder decoder = Decoder.createDecoder(message.getPayload().array());
@@ -122,22 +138,24 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
                 break;
             }
             case MESSAGE_AWARENESS: {
-                doc.awareness.applyAwarenessUpdate(Decoder.readVarUint8Array(decoder), session.getId());
+                doc.awareness.applyAwarenessUpdate(Decoder.readVarUint8Array(decoder), session);
                 break;
             }
         }
     }
 
     @Override
-    public void handleTransportError(@Nonnull WebSocketSession session, Throwable exception) {
-        logger.error("", exception);
+    public void handleTransportError(@Nonnull WebSocketSession session, @Nonnull Throwable exception) {
+        log.error("", exception);
     }
 
     @Override
     public void afterConnectionClosed(@Nonnull WebSocketSession session, @Nonnull CloseStatus closeStatus) {
-        String docName = extractDocName(session);
-        WSSharedDoc doc = getDoc(docName);
-        logger.info("Connection closed: {} ({})", docName, closeStatus.getReason());
+        Map<String, Object> attributes = session.getAttributes();
+        Integer documentId = (Integer) attributes.get("documentId");
+        USER_DOCUMENTS.remove((Integer) attributes.get("userId"), documentId);
+        WSSharedDoc doc = getDoc(documentId);
+        log.info("Connection closed: {} (reason: {})", documentId, closeStatus.getReason());
         if (pingInterval != null) {
             pingInterval.cancel(false);
         }
@@ -149,6 +167,9 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
             Set<Long> controlledIds = doc.connections.get(session);
             doc.connections.remove(session);
             doc.awareness.removeAwarenessStates(controlledIds.stream().toList(), null);
+        }
+        if (doc.connections.isEmpty()) {
+            DOCUMENTS.remove(doc.documentId);
         }
         try {
             session.close();
@@ -163,12 +184,76 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
                 try {
                     session.sendMessage(new BinaryMessage(m));
                 } catch (Exception e) {
-                    logger.error("Error sending message to {}:", session.getId(), e);
+                    log.error("Error sending message to {}:", session.getId(), e);
                     closeConnection(doc, session);
                 }
             }
         } else {
             closeConnection(doc, session);
         }
+    }
+
+    public static void collaboratorUpdated(Integer documentId, List<CollaboratorChangeEvent> events) {
+        if(documentId == null || !DOCUMENTS.containsKey(documentId)) {
+            return;
+        }
+        for (CollaboratorChangeEvent event : events) {
+            updateUserStateForUser(documentId, event.userId(), user -> user.put("collaboration", event));
+        }
+    }
+
+    public static void editDisabledNotice(Integer documentId) {
+        updateUserState(documentId, user ->
+                user.put("collaboration", new CollaboratorChangeEvent(user.getInteger("userId"), false, true, false, true))
+        );
+    }
+
+    public static void refreshNotice(Integer documentId) {
+        updateUserState(documentId, user -> user.put("refresh", true));
+    }
+
+    private static void updateUserState(Integer documentId, java.util.function.Consumer<JSONObject> userUpdater) {
+        updateUserStateForUser(documentId, null, userUpdater);
+    }
+
+    private static void updateUserStateForUser(Integer documentId, Integer targetUserId, java.util.function.Consumer<JSONObject> userUpdater) {
+        WSSharedDoc doc = DOCUMENTS.get(documentId);
+        if (doc == null) {
+            return;
+        }
+
+        doc.awareness.states.forEach((clientId, state) -> {
+            Awareness.MetaClientState metaState = doc.awareness.meta.get(clientId);
+            if (state == null || metaState == null || !state.containsKey("user")) {
+                return;
+            }
+
+            JSONObject user = state.getJSONObject("user");
+            if (!user.containsKey("userId")) {
+                return;
+            }
+
+            if (targetUserId != null && !user.getInteger("userId").equals(targetUserId)) {
+                return;
+            }
+
+            userUpdater.accept(user);
+
+            Encoder encoder = Encoder.createEncoder();
+            Encoder.writeVarUint(encoder, MESSAGE_AWARENESS);
+            Encoder dataEncoder = Encoder.createEncoder();
+            Encoder.writeVarUint(dataEncoder, 1);
+            Encoder.writeVarUint(dataEncoder, clientId);
+            Encoder.writeVarUint(dataEncoder, metaState.clock() + 1);
+            Encoder.writeVarString(dataEncoder, JSON.toJSONString(state));
+            Encoder.writeVarUint8Array(encoder, Encoder.toUint8Array(dataEncoder));
+
+            byte[] buff = Encoder.toUint8Array(encoder);
+            doc.connections.forEach((session, clients) -> {
+                if (clients.contains(clientId)) {
+                    send(doc, session, buff);
+                }
+            });
+        });
     }
 }

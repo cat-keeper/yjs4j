@@ -2,7 +2,10 @@ package com.triibiotech.yjs.structs;
 
 import com.triibiotech.yjs.types.AbstractType;
 import com.triibiotech.yjs.types.YText;
-import com.triibiotech.yjs.utils.*;
+import com.triibiotech.yjs.utils.DSDecoder;
+import com.triibiotech.yjs.utils.DSEncoder;
+import com.triibiotech.yjs.utils.StructStore;
+import com.triibiotech.yjs.utils.Transaction;
 
 /**
  * Content that represents formatting information for rich text

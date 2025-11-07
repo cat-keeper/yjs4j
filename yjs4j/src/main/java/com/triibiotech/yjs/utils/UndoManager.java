@@ -32,7 +32,7 @@ public class UndoManager extends ObservableV2<String> {
     public UndoManager(Object typeScope, UndoManagerOptions options) {
         try {
             if (typeScope instanceof List<?>) {
-                this.doc = (Doc) ((List<?>) typeScope).get(0);
+                this.doc = (Doc) ((List<?>) typeScope).getFirst();
             } else {
                 if (typeScope instanceof Doc) {
                     this.doc = (Doc) typeScope;
@@ -202,7 +202,7 @@ public class UndoManager extends ObservableV2<String> {
         this.undoing = true;
         StackItem res;
         try {
-            res = StackItem.popStackItem(this, new ArrayList<>(this.undoStack.stream().toList()), "undo");
+            res = StackItem.popStackItem(this, this.undoStack, "undo");
         } finally {
             this.undoing = false;
         }
@@ -213,7 +213,7 @@ public class UndoManager extends ObservableV2<String> {
         this.redoing = true;
         StackItem res;
         try {
-            res = StackItem.popStackItem(this, new ArrayList<>(this.redoStack.stream().toList()), "redo");
+            res = StackItem.popStackItem(this, this.redoStack, "redo");
         } finally {
             this.redoing = false;
         }

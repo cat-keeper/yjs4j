@@ -57,7 +57,7 @@ public class StackItem {
         });
     }
 
-    public static StackItem popStackItem(UndoManager undoManager, List<StackItem> stack, String eventType) {
+    public static StackItem popStackItem(UndoManager undoManager, Deque<StackItem> stack, String eventType) {
 
         final Transaction[] trHolder = new Transaction[1];
         Doc doc = undoManager.getDoc();
@@ -65,7 +65,7 @@ public class StackItem {
         Transaction.transact(doc, transaction -> {
             while (!stack.isEmpty() && undoManager.getCurrStackItem() == null) {
                 StructStore store = doc.store;
-                StackItem stackItem = stack.remove(stack.size() - 1);
+                StackItem stackItem = stack.removeLast();
                 Set<Item> itemsToRedo = new LinkedHashSet<>();
                 List<Item> itemsToDelete = new ArrayList<>();
                 boolean performedChange = false;

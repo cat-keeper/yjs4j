@@ -19,7 +19,7 @@ public class YTextEvent extends YEvent<YText> {
 
     public YTextEvent(YText ytext, Transaction transaction, Set<String> subs) {
         super(ytext, transaction);
-        keysChanged = new java.util.LinkedHashSet<>();
+        keysChanged = new LinkedHashSet<>();
         subs.forEach(sub -> {
             if (sub == null) {
                 this.childListChanged = true;

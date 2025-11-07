@@ -44,7 +44,7 @@ public class TestConnector {
         Map.Entry<TestYInstance, List<byte[]>> entry = entries.stream().toList().get(RandomUtil.randomInt(0, entries.size()));
         TestYInstance sender = entry.getKey();
         List<byte[]> messages = entry.getValue();
-        byte[] m = messages.remove(0);
+        byte[] m = messages.removeFirst();
         if (messages.isEmpty()) {
             receiver.receiving.remove(sender);
         }

@@ -5,7 +5,6 @@ import com.triibiotech.yjs.structs.GC;
 import com.triibiotech.yjs.structs.Item;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -15,6 +14,7 @@ import java.util.function.Consumer;
  * @author zbs
  * @date 2025/07/29  11:06:19
  */
+@SuppressWarnings("unused")
 public class StructStore {
 
     /**
@@ -84,7 +84,7 @@ public class StructStore {
         Map<Long, Long> sm = new HashMap<>();
         clients.forEach((client, structs) -> {
             if (!structs.isEmpty()) {
-                AbstractStruct struct = structs.get(structs.size() - 1);
+                AbstractStruct struct = structs.getLast();
                 sm.put(client, struct.id.clock + struct.length);
             }
         });
@@ -99,7 +99,7 @@ public class StructStore {
         if (structs == null || structs.isEmpty()) {
             return 0;
         }
-        AbstractStruct lastStruct = structs.get(structs.size() - 1);
+        AbstractStruct lastStruct = structs.getLast();
         return lastStruct.id.clock + lastStruct.length;
     }
 
@@ -112,7 +112,7 @@ public class StructStore {
             structs = new LinkedList<>();
             clients.put(struct.id.client, structs);
         } else {
-            AbstractStruct lastStruct = structs.get(structs.size() - 1);
+            AbstractStruct lastStruct = structs.getLast();
             if (lastStruct.id.clock + lastStruct.length != struct.id.clock) {
                 throw new IllegalStateException("StructStore failed integrity check: expected clock " +
                         (lastStruct.id.clock + lastStruct.length) + ", got " + struct.id.clock);
@@ -226,7 +226,7 @@ public class StructStore {
      * Iterate over a range of structs
      */
     public void iterateStructs(Transaction transaction, Long client, Long clockStart, Long len,
-                               java.util.function.Consumer<AbstractStruct> f) {
+                               Consumer<AbstractStruct> f) {
         if (len == 0) {
             return;
         }
@@ -309,14 +309,14 @@ public class StructStore {
         if (clientStructs == null || clientStructs.isEmpty()) {
             return 0;
         }
-        AbstractStruct lastStruct = clientStructs.get(clientStructs.size() - 1);
+        AbstractStruct lastStruct = clientStructs.getLast();
         return lastStruct.getId().getClock() + lastStruct.getLength();
     }
 
     public static Map<Long, Long> getStateVector(StructStore store) {
         Map<Long, Long> stateVector = new HashMap<>();
         store.getClients().forEach((client, structs) -> {
-            AbstractStruct struct = structs.get(structs.size() - 1);
+            AbstractStruct struct = structs.getLast();
             stateVector.put(client, struct.id.clock + struct.length);
         });
         return stateVector;

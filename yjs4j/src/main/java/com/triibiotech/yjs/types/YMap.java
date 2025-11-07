@@ -73,10 +73,11 @@ public class YMap<Type> extends AbstractType<YMapEvent> {
         }
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Item> entry : this.map.entrySet()) {
-            if (!entry.getValue().isDeleted()) {
-                Object[] content = entry.getValue().content.getContent();
+            Item item = entry.getValue();
+            if (!item.isDeleted()) {
+                Object[] content = item.content.getContent();
                 if (content.length > 0) {
-                    Object o = content[Math.toIntExact(entry.getValue().length - 1)];
+                    Object o = content[Math.toIntExact(item.length - 1)];
                     if(o instanceof AbstractType<?>) {
                         map.put(entry.getKey(), ((AbstractType<?>) o).toJson());
                     } else {

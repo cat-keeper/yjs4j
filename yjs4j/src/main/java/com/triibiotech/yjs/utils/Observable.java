@@ -1,5 +1,8 @@
 package com.triibiotech.yjs.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +19,9 @@ public class Observable<N> {
      * 注册的事件监听器，key 是事件名，value 是监听器列表。
      */
     private final Map<N, List<Consumer<Object[]>>> observers = new HashMap<>();
+
+    static final Logger log = LoggerFactory.getLogger("Observable");
+
 
     /**
      * 注册监听器。
@@ -62,8 +68,8 @@ public class Observable<N> {
                 try {
                     listener.accept(args);
                 } catch (Exception e) {
-                    // 可以加日志记录异常
-                    e.printStackTrace();
+                    log.warn("Source object: {}", this.getClass().getName());
+                    log.warn("Error while emitting event: {}", name, e);
                 }
             }
         }

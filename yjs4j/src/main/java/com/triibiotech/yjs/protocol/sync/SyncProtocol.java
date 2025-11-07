@@ -11,6 +11,9 @@ import com.triibiotech.yjs.utils.lib0.encoding.Encoder;
  * • YjsSyncStep1: Includes the State Set of the sending client
  * • YjsSyncStep2: Includes all missing structs and the complete delete set
  * • YjsUpdate: Incremental updates
+ *
+ * @author zbs
+ * @date 2025/10/27  10:36:50
  */
 public class SyncProtocol {
 

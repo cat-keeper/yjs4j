@@ -345,8 +345,6 @@ public class Transaction {
                 });
                 // 8. 合并 mergeStructs
                 // try to merge mergeStructs
-                // @todo: it makes more sense to transform mergeStructs to a DS, sort it, and merge from right to left
-                //        but at the moment DS does not handle duplicates
                 for (int j = mergeStructs.size() - 1; j >= 0; j--) {
                     AbstractStruct struct = mergeStructs.get(j);
                     long client = struct.getId().getClient();
@@ -371,7 +369,6 @@ public class Transaction {
                     doc.clientId = Doc.generateNewClientId();
                 }
                 // 10. afterTransactionCleanup
-                // @todo: Merge all the transactions into one and provide send the data as a single update message
                 doc.emit("afterTransactionCleanup", transaction, doc);
                 // 11. 发送 update/updateV2
                 if (doc.getObservers().containsKey("update")) {
@@ -436,7 +433,7 @@ public class Transaction {
             result = f.apply(doc.transaction);
         } finally {
             if (initialCall) {
-                boolean finishCleanup = doc.transaction == transactionCleanups.get(0);
+                boolean finishCleanup = doc.transaction == transactionCleanups.getFirst();
                 doc.transaction = null;
                 if (finishCleanup) {
                     cleanupTransactions(transactionCleanups, 0);

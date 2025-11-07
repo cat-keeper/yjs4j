@@ -432,7 +432,8 @@ public class Item extends AbstractStruct {
                 Item parentItem = parentType.getItem();
                 if (parentItem == null) {
                     String ykey = ID.findRootTypeKey(parentType);
-                    encoder.writeParentInfo(true); // write parentYKey
+                    // write parentYKey
+                    encoder.writeParentInfo(true);
                     encoder.writeString(ykey);
                 } else {
                     encoder.writeParentInfo(false);
