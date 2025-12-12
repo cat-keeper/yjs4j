@@ -22,16 +22,11 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response, @Nonnull WebSocketHandler handler,
                                    @Nonnull Map<String, Object> attr) {
 
-        // 未登录情况下拒绝握手
-//        if (!StpKit.USER.isLogin()) {
-//            log.warn("---- 未授权客户端，连接失败");
-//            return false;
-//        }
-//        LoginUser loginUser = (LoginUser) StpKit.USER.getSession().get((String) StpKit.USER.getLoginId());
-//        TimeSetting webSessionSetting = SpringUtil.getBean(SettingsUseCase.class).getTimeSetting(loginUser.getTenantId());
-//        StpKit.USER.renewTimeout(webSessionSetting.getExpiredMinutes() * 60);
-        // 标记 userId，握手成功
-        attr.put("userId", UUID.randomUUID().toString());
+        // 可在此处进行用户鉴权、参数解析等操作
+
+
+        // 用户鉴权示例
+        attr.put("userId", 1);
         attr.put("loginUser", new Object());
 
         String path = request.getURI().getPath();
