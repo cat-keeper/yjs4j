@@ -1,10 +1,10 @@
-package com.triibiotech.yjs.utils;
+package com.catkeeper.yjs.utils;
 
-import com.triibiotech.yjs.types.YArray;
-import com.triibiotech.yjs.types.YText;
-import com.triibiotech.yjs.types.YXmlText;
-import com.triibiotech.yjs.utils.encoding.EncodingUtil;
-import com.triibiotech.yjs.utils.event.EventOperator;
+import com.catkeeper.yjs.types.YArray;
+import com.catkeeper.yjs.types.YText;
+import com.catkeeper.yjs.types.YXmlText;
+import com.catkeeper.yjs.utils.encoding.EncodingUtil;
+import com.catkeeper.yjs.utils.event.EventOperator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

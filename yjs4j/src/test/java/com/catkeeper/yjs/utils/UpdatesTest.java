@@ -1,7 +1,7 @@
-package com.triibiotech.yjs.utils;
+package com.catkeeper.yjs.utils;
 
-import com.triibiotech.yjs.helper.TestYInstance;
-import com.triibiotech.yjs.utils.encoding.EncodingUtil;
+import com.catkeeper.yjs.helper.TestYInstance;
+import com.catkeeper.yjs.utils.encoding.EncodingUtil;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

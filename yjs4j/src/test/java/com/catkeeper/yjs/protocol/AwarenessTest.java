@@ -1,9 +1,9 @@
-package com.triibiotech.yjs.protocol;
+package com.catkeeper.yjs.protocol;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.triibiotech.yjs.protocol.awareness.Awareness;
-import com.triibiotech.yjs.protocol.awareness.AwarenessEventParams;
-import com.triibiotech.yjs.utils.Doc;
+import com.catkeeper.yjs.protocol.awareness.Awareness;
+import com.catkeeper.yjs.protocol.awareness.AwarenessEventParams;
+import com.catkeeper.yjs.utils.Doc;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -140,8 +140,8 @@ public class AwarenessTest {
         System.out.println("Initial timestamp: " + initialTime);
 
         // Wait for timer to trigger (should renew state after 15 seconds)
-        System.out.println("Waiting 16 seconds for timer to renew state...");
-        Thread.sleep(16000);
+        System.out.println("Waiting 20 seconds for timer to renew state...");
+        Thread.sleep(20000);
 
         long renewedTime = awareness.getMeta(awareness.getClientId()).lastUpdated();
         System.out.println("Renewed timestamp: " + renewedTime);

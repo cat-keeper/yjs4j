@@ -1,7 +1,7 @@
-package com.triibiotech.yjs.utils;
+package com.catkeeper.yjs.utils;
 
-import com.triibiotech.yjs.types.YText;
-import com.triibiotech.yjs.utils.encoding.EncodingUtil;
+import com.catkeeper.yjs.types.YText;
+import com.catkeeper.yjs.utils.encoding.EncodingUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

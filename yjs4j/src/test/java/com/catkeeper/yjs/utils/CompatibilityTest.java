@@ -1,10 +1,10 @@
-package com.triibiotech.yjs.utils;
+package com.catkeeper.yjs.utils;
 
 import cn.hutool.core.codec.Base64;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
-import com.triibiotech.yjs.utils.encoding.EncodingUtil;
-import com.triibiotech.yjs.utils.event.EventOperator;
+import com.catkeeper.yjs.utils.encoding.EncodingUtil;
+import com.catkeeper.yjs.utils.event.EventOperator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,7 @@
-package com.triibiotech.yjs.utils;
+package com.catkeeper.yjs.utils;
 
-import com.triibiotech.yjs.types.YMap;
-import com.triibiotech.yjs.types.YXmlElement;
+import com.catkeeper.yjs.types.YMap;
+import com.catkeeper.yjs.types.YXmlElement;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

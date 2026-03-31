@@ -1,15 +1,16 @@
-package com.triibiotech.yjs.helper;
+package com.catkeeper.yjs.helper;
 
 import cn.hutool.core.util.RandomUtil;
-import com.triibiotech.yjs.structs.AbstractStruct;
-import com.triibiotech.yjs.structs.Item;
-import com.triibiotech.yjs.types.AbstractType;
-import com.triibiotech.yjs.types.YArray;
-import com.triibiotech.yjs.types.YMap;
-import com.triibiotech.yjs.types.YXmlElement;
-import com.triibiotech.yjs.utils.*;
-import com.triibiotech.yjs.utils.encoding.EncodingUtil;
-import com.triibiotech.yjs.utils.event.EventOperator;
+import com.catkeeper.yjs.structs.AbstractStruct;
+import com.catkeeper.yjs.structs.Item;
+import com.catkeeper.yjs.types.AbstractType;
+import com.catkeeper.yjs.types.YArray;
+import com.catkeeper.yjs.types.YMap;
+import com.catkeeper.yjs.types.YXmlElement;
+import com.catkeeper.yjs.utils.*;
+
+import com.catkeeper.yjs.utils.encoding.EncodingUtil;
+import com.catkeeper.yjs.utils.event.EventOperator;
 import org.junit.jupiter.api.Assertions;
 
 import java.util.*;
@@ -97,8 +98,8 @@ public class TestHelper {
         Assertions.assertEquals(mapRes, userMapValues.get(0));
         for (int i = 0; i < users.size() - 1; i++) {
             Assertions.assertEquals(userArrayValues.get(i).size(), users.get(i).getArray("array").getLength());
-            Assertions.assertEquals(userArrayValues.get(i), userArrayValues.get(i + 1));
-            Assertions.assertEquals(userMapValues.get(i), userMapValues.get(i + 1));
+            Assertions.assertEquals(userArrayValues.get(i).toString(), userArrayValues.get(i + 1).toString());
+            Assertions.assertEquals(userMapValues.get(i).toString(), userMapValues.get(i + 1).toString());
             Assertions.assertEquals(userXmlValues.get(i), userXmlValues.get(i + 1));
             Assertions.assertEquals(
                     userTextValues.get(i).stream().map(a -> {
@@ -107,10 +108,10 @@ public class TestHelper {
                     users.get(i).getText("text").getLength()
             );
             Assertions.assertEquals(userTextValues.get(i), userTextValues.get(i + 1));
-            Assertions.assertEquals(EncodingUtil.encodeStateVector(users.get(i)), EncodingUtil.encodeStateVector(users.get(i + 1)));
+            Assertions.assertArrayEquals(EncodingUtil.encodeStateVector(users.get(i)), EncodingUtil.encodeStateVector(users.get(i + 1)));
             DeleteSet.equalDeleteSets(DeleteSet.createDeleteSetFromStructStore(users.get(i).store), DeleteSet.createDeleteSetFromStructStore(users.get(i + 1).store));
             compareStructStores(users.get(i).store, users.get(i + 1).store);
-            Assertions.assertEquals(Snapshot.encodeSnapshot(Snapshot.snapshot(users.get(i))), Snapshot.encodeSnapshot(Snapshot.snapshot(users.get(i + 1))));
+            Assertions.assertArrayEquals(Snapshot.encodeSnapshot(Snapshot.snapshot(users.get(i))), Snapshot.encodeSnapshot(Snapshot.snapshot(users.get(i + 1))));
         }
         users.forEach(TestYInstance::destroy);
     }

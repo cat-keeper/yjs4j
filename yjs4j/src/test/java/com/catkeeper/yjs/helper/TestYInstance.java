@@ -1,12 +1,12 @@
-package com.triibiotech.yjs.helper;
+package com.catkeeper.yjs.helper;
 
-import com.triibiotech.yjs.protocol.sync.SyncProtocol;
-import com.triibiotech.yjs.utils.Doc;
-import com.triibiotech.yjs.utils.lib0.encoding.Encoder;
+import com.catkeeper.yjs.protocol.sync.SyncProtocol;
+import com.catkeeper.yjs.utils.Doc;
+import com.catkeeper.yjs.utils.lib0.encoding.Encoder;
 
 import java.util.*;
 
-import static com.triibiotech.yjs.helper.TestHelper.broadcastMessage;
+import static com.catkeeper.yjs.helper.TestHelper.broadcastMessage;
 
 /**
  * @author zbs

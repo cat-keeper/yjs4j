@@ -1,4 +1,4 @@
-package com.triibiotech.yjs.websocket.handler;
+package com.catkeeper.yjs.websocket.handler;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,11 +31,20 @@ class DocWebSocketHandlerTest {
         when(session.getUri()).thenReturn(new URI("ws://localhost:9002/tiptap-demo"));
         when(session.getId()).thenReturn("test-session-id");
         when(session.isOpen()).thenReturn(true);
+        java.util.Map<String, Object> attributes = new java.util.HashMap<>();
+        attributes.put("documentId", 1);
+        when(session.getAttributes()).thenReturn(attributes);
     }
 
     @Test
     void testHandleBinaryMessage_SyncMessage() {
-        byte[] syncMessage = {0, 0};
+        // 构造合法的 SyncStep1 消息:
+        // byte[0] = 0 (MESSAGE_SYNC)
+        // 然后是 writeSyncStep1 的内容: varuint(0)=SyncStep1, varuint8array(encodeStateVector)
+        // encodeStateVector 对空文档 = [0] (varuint编码的0个client)
+        // writeSyncStep1 写入: varuint(0), varuint8array([0]) = varuint(0), varuint(1), 0
+        // 完整消息: [0, 0, 1, 0]
+        byte[] syncMessage = {0, 0, 1, 0};
         BinaryMessage message = new BinaryMessage(ByteBuffer.wrap(syncMessage));
 
         handler.handleBinaryMessage(session, message);
@@ -45,12 +54,18 @@ class DocWebSocketHandlerTest {
 
     @Test
     void testHandleBinaryMessage_AwarenessMessage() {
-        byte[] awarenessMessage = {1, 0};
+        // 构造合法的 Awareness 消息:
+        // byte[0] = 1 (MESSAGE_AWARENESS)
+        // 然后是 readVarUint8Array 读取的 awareness update 数据
+        // awareness update: varuint(clientCount=0) = [0]
+        // 完整消息: [1, 1, 0] = awareness, varuint8array长度=1, 内容=[0(0个client)]
+        byte[] awarenessMessage = {1, 1, 0};
         BinaryMessage message = new BinaryMessage(ByteBuffer.wrap(awarenessMessage));
 
         handler.handleBinaryMessage(session, message);
 
-        verify(session, atLeastOnce()).getId();
+        // 验证消息被处理
+        verify(session, atLeastOnce()).getAttributes();
     }
 
     @Test
@@ -60,7 +75,8 @@ class DocWebSocketHandlerTest {
 
         handler.handleBinaryMessage(session, message);
 
-        verify(session, atLeastOnce()).getUri();
+        // 验证消息被处理（session 被访问过）
+        verify(session, atLeastOnce()).getAttributes();
     }
 
 }

@@ -1,9 +1,9 @@
-package com.triibiotech.yjs.helper;
+package com.catkeeper.yjs.helper;
 
 import cn.hutool.core.util.RandomUtil;
-import com.triibiotech.yjs.protocol.sync.SyncProtocol;
-import com.triibiotech.yjs.utils.lib0.decoding.Decoder;
-import com.triibiotech.yjs.utils.lib0.encoding.Encoder;
+import com.catkeeper.yjs.protocol.sync.SyncProtocol;
+import com.catkeeper.yjs.utils.lib0.decoding.Decoder;
+import com.catkeeper.yjs.utils.lib0.encoding.Encoder;
 
 import java.util.*;
 
