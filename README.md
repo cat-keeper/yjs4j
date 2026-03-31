@@ -71,18 +71,6 @@ yjs4j/
 | `SyncProtocol` | `y-protocols/sync` | 同步协议实现 |
 | `Awareness` | `y-protocols/awareness` | 用户感知协议（光标位置等） |
 
-## 使用方式
-
-### Maven 依赖
-
-```xml
-<dependency>
-    <groupId>com.triibiotech</groupId>
-    <artifactId>yjs4j</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
 ### 基本用法
 
 ```java
