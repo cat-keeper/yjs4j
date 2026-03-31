@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.triibiotech</groupId>
-        <artifactId>yjs4j-parent</artifactId>
+        <groupId>com.catkeeper</groupId>
+        <artifactId>yjs4j-root</artifactId>
         <version>1.0.0</version>
     </parent>
 

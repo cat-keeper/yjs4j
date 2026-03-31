@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.triibiotech</groupId>
-    <artifactId>yjs4j-parent</artifactId>
+    <groupId>com.catkeeper</groupId>
+    <artifactId>yjs4j-root</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
@@ -68,8 +68,8 @@
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
-                <artifactId>mockito-inline</artifactId>
-                <version>4.5.1</version>
+                <artifactId>mockito-core</artifactId>
+                <version>5.17.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -85,16 +85,39 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>${springboot.version}</version>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.5</version>
+                    <configuration>
+                        <!-- 跳过测试 -->
+                        <skipTests>false</skipTests>
+                        <!-- 测试失败后继续构建 -->
+                        <testFailureIgnore>true</testFailureIgnore>
+                        <!-- -Dtest 指定的类在某模块不存在时不报错 -->
+                        <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                        <!-- 允许 Mockito 在 Java 21+ 动态加载 Byte Buddy agent -->
+                        <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.14.0</version>
                     <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <encoding>UTF-8</encoding>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
                         <parameters>true</parameters>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>1.18.42</version>
+                            </path>
+                        </annotationProcessorPaths>
                     </configuration>
                 </plugin>
             </plugins>
