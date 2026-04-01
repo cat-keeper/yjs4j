@@ -4,13 +4,33 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.catkeeper</groupId>
+    <groupId>cn.timegap</groupId>
     <artifactId>yjs4j-root</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>Yjs4j Parent</name>
     <description>Java implementation of Yjs CRDT library - Parent Module</description>
+    <url>https://github.com/cat-keeper/yjs4j</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>cat-keeper</name>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/cat-keeper/yjs4j.git</connection>
+        <developerConnection>scm:git:ssh://github.com:cat-keeper/yjs4j.git</developerConnection>
+        <url>https://github.com/cat-keeper/yjs4j</url>
+    </scm>
 
     <modules>
         <module>yjs4j</module>

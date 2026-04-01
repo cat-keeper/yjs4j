@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.catkeeper</groupId>
+        <groupId>cn.timegap</groupId>
         <artifactId>yjs4j-root</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
 
     <name>Yjs4j Core</name>
-    <description>Java implementation of Yjs CRDT library - Core Module, Fork of Yjs 13.6.27</description>
+    <description>Java implementation of Yjs CRDT library - Core Module, Fork of Yjs 13.6.29</description>
 
     <dependencies>
         <dependency>

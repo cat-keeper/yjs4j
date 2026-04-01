@@ -80,55 +80,31 @@ import encoding.utils.com.catkeeper.yjs.EncodingUtil;
 // 创建文档
 Doc doc = new Doc();
 
-        // 获取共享类型
-        YText text = doc.getText("content");
-        YArray<Object> array = doc.getArray("list");
-        YMap<Object> map = doc.getMap("config");
+// 获取共享类型
+YText text = doc.getText("content");
+YArray<Object> array = doc.getArray("list");
+YMap<Object> map = doc.getMap("config");
 
 // 编辑文本
-text.
-
-        insert(0,"Hello ");
-text.
-
-        insert(6,"World",Map.of("bold", true));
-        text.
-
-        delete(0,6);
-System.out.
-
-        println(text.toString()); // "World"
+text.insert(0,"Hello ");
+text.insert(6,"World",Map.of("bold", true));
+text.delete(0,6);
+System.out.println(text.toString()); // "World"
 
 // 操作数组
-        array.
-
-        insert(0,"a","b","c");
-array.
-
-        push("d");
-array.
-
-        delete(1,1); // 删除 "b"
+array.insert(0,"a","b","c");
+array.push("d");
+array.delete(1,1); // 删除 "b"
 
 // 操作 Map
-map.
+map.set("theme","dark");
+map.set("fontSize",14);
+map.delete("theme");
 
-        set("theme","dark");
-map.
-
-        set("fontSize",14);
-map.
-
-        delete("theme");
-
-        // 嵌套类型
-        YMap<Object> nested = new YMap<>();
-map.
-
-        set("nested",nested);
-nested.
-
-        set("key","value");
+// 嵌套类型
+YMap<Object> nested = new YMap<>();
+map.set("nested",nested);
+nested.set("key","value");
 ```
 
 ### 事务
